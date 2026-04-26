@@ -1,0 +1,151 @@
+import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+} from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getPriceTypes, createPriceType } from '../api/prices';
+import type { PriceTypeDto } from '../types';
+
+const schema = z.object({
+  name: z.string().min(1, 'Name is required'),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+const PriceTypes: React.FC = () => {
+  const [priceTypes, setPriceTypes] = useState<PriceTypeDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: '' },
+  });
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      const res = await getPriceTypes();
+      setPriceTypes(res.data);
+    } catch {
+      setError('Failed to load price types. Make sure the backend is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const onSubmit = async (values: FormValues) => {
+    try {
+      setSubmitting(true);
+      await createPriceType(values as PriceTypeDto);
+      setDialogOpen(false);
+      reset();
+      await load();
+    } catch {
+      setError('Failed to create price type.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Price Types</Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setDialogOpen(true)}
+        >
+          Add Price Type
+        </Button>
+      </Box>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <TableContainer component={Paper} elevation={2}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Name</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {priceTypes.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={2} align="center">No price types found</TableCell>
+                </TableRow>
+              ) : (
+                priceTypes.map((pt) => (
+                  <TableRow key={pt.id} hover>
+                    <TableCell>{pt.id}</TableCell>
+                    <TableCell>{pt.name}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Add Price Type</DialogTitle>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogContent sx={{ pt: 2 }}>
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Name (e.g. RETAIL, WHOLESALE)"
+                  error={!!errors.name}
+                  helperText={errors.name?.message}
+                  required
+                />
+              )}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setDialogOpen(false); reset(); }}>Cancel</Button>
+            <Button type="submit" variant="contained" disabled={submitting}>
+              {submitting ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default PriceTypes;
