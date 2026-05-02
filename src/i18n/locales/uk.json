@@ -98,21 +98,22 @@
       "validUrl": "Має бути дійсною URL-адресою"
     }
   },
-  "customers": {
-    "title": "Клієнти",
-    "addCustomer": "Додати клієнта",
-    "addCustomerTitle": "Додати клієнта",
-    "noCustomers": "Клієнти не знайдено",
-    "errorLoading": "Не вдалося завантажити клієнтів. Переконайтеся, що backend запущений.",
-    "errorCreating": "Не вдалося створити клієнта.",
-    "table": {
-      "id": "ID",
-      "name": "Ім'я",
-      "email": "Email",
-      "phone": "Телефон",
-      "expeditor": "Експедитор",
-      "creationTime": "Час створення"
-    },
+   "customers": {
+     "title": "Клієнти",
+     "addCustomer": "Додати клієнта",
+     "addCustomerTitle": "Додати клієнта",
+     "noCustomers": "Клієнти не знайдено",
+     "errorLoading": "Не вдалося завантажити клієнтів. Переконайтеся, що backend запущений.",
+     "errorCreating": "Не вдалося створити клієнта.",
+     "table": {
+       "id": "ID",
+       "name": "Ім'я",
+       "email": "Email",
+       "phone": "Телефон",
+       "expeditor": "Експедитор",
+       "creationTime": "Час створення",
+       "actions": "Дії"
+     },
     "form": {
       "name": "Ім'я",
       "email": "Email",
@@ -128,19 +129,20 @@
       "phoneRequired": "Телефон обов'язковий"
     }
   },
-  "expeditors": {
-    "title": "Експедитори",
-    "addExpeditor": "Додати експедитора",
-    "addExpeditorTitle": "Додати експедитора",
-    "noExpeditors": "Експедитори не знайдено",
-    "errorLoading": "Не вдалося завантажити експедиторів. Переконайтеся, що backend запущений.",
-    "errorCreating": "Не вдалося створити експедитора.",
-    "table": {
-      "id": "ID",
-      "name": "Ім'я",
-      "phone": "Телефон",
-      "creationTime": "Час створення"
-    },
+   "expeditors": {
+     "title": "Експедитори",
+     "addExpeditor": "Додати експедитора",
+     "addExpeditorTitle": "Додати експедитора",
+     "noExpeditors": "Експедитори не знайдено",
+     "errorLoading": "Не вдалося завантажити експедиторів. Переконайтеся, що backend запущений.",
+     "errorCreating": "Не вдалося створити експедитора.",
+      "table": {
+        "id": "ID",
+        "name": "Ім'я",
+        "phone": "Телефон",
+        "creationTime": "Час створення",
+        "actions": "Дії"
+      },
     "form": {
       "name": "Ім'я",
       "phone": "Телефон"
@@ -168,34 +170,48 @@
       "nameRequired": "Назва обов'язкова"
     }
   },
-  "prices": {
-    "title": "Поточні ціни",
-    "batchUpdate": "Масове оновлення цін",
-    "batchUpdateTitle": "Масове оновлення цін",
-    "noPrices": "Ціни не знайдено",
-    "errorLoading": "Не вдалося завантажити ціни. Переконайтеся, що backend запущений.",
-    "errorUpdating": "Не вдалося оновити ціни.",
-    "successUpdating": "Ціни успішно оновлено!",
-    "table": {
-      "productId": "ID продукту",
-      "productName": "Назва продукту",
-      "priceType": "Тип ціни",
-      "price": "Ціна",
-      "validFrom": "Дійсно від",
-      "validTo": "Дійсно до"
-    },
-    "form": {
-      "priceType": "Тип ціни",
-      "selectPriceType": "Виберіть тип ціни",
-      "uploadCsv": "Завантажте CSV файл з цінами продуктів (productId,price)",
-      "sample": "Приклад: 1,10.50",
-      "validationErrors": "Помилки валідації:"
-    },
-    "validation": {
-      "priceTypeRequired": "Тип ціни обов'язковий",
-      "csvRequired": "CSV файл обов'язковий"
-    }
-  },
+    "prices": {
+     "title": "Поточні ціни",
+     "batchUpdate": "Масове оновлення цін",
+     "batchUpdateTitle": "Масове оновлення цін",
+     "noPrices": "Ціни не знайдено",
+     "errorLoading": "Не вдалося завантажити ціни. Переконайтеся, що backend запущений.",
+     "errorUpdating": "Не вдалося оновити ціни.",
+     "successUpdating": "Ціни успішно оновлено!",
+     "view": {
+       "current": "Поточні",
+       "all": "Все"
+     },
+     "table": {
+       "id": "ID",
+       "product": "Продукт",
+       "productId": "ID продукту",
+       "productName": "Назва продукту",
+       "priceType": "Тип ціни",
+       "price": "Ціна",
+       "validFrom": "Дійсно від",
+       "validTo": "Дійсно до",
+       "status": "Статус"
+     },
+     "form": {
+       "priceType": "Тип ціни",
+       "selectPriceType": "Виберіть тип ціни",
+       "product": "Продукт",
+       "selectProduct": "Виберіть продукт",
+       "price": "Ціна",
+       "uploadCsv": "Завантажте CSV файл з цінами продуктів (productId,price)",
+       "sample": "Приклад: 1,10.50",
+       "validationErrors": "Помилки валідації:"
+     },
+     "validation": {
+       "priceTypeRequired": "Тип ціни обов'язковий",
+       "csvRequired": "CSV файл обов'язковий"
+     },
+     "status": {
+       "active": "Активна",
+       "expired": "Видалена"
+     }
+   },
   "orders": {
     "title": "Список замовлень",
     "placeholder": "Екран керування замовленнями буде додано на наступному кроці."

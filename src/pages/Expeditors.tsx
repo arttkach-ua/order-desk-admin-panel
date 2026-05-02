@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -19,39 +19,35 @@ import {
   TextField,
   IconButton,
   Tooltip,
-  Collapse,
-  Chip,
+  TablePagination,
+  TableSortLabel,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  PeopleAlt as PeopleIcon,
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import type { SubmitHandler, Resolver } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import {
   getExpeditors,
   createExpeditor,
   updateExpeditor,
   deleteExpeditor,
-  getExpeditorCustomers,
 } from '../api/expeditors';
-import type { ExpeditorDto, CustomerDto } from '../types';
+import type { ExpeditorDto } from '../types';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  phone: z.string().min(1, 'Phone is required'),
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = {
+  name: string;
+  phone: string;
+};
 
 const Expeditors: React.FC = () => {
+  const { t } = useTranslation();
   const [expeditors, setExpeditors] = useState<ExpeditorDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,29 +55,56 @@ const Expeditors: React.FC = () => {
   const [editTarget, setEditTarget] = useState<ExpeditorDto | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ExpeditorDto | null>(null);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [expeditorCustomers, setExpeditorCustomers] = useState<
-    Record<number, CustomerDto[]>
-  >({});
+
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Sorting state
+  const [orderBy, setOrderBy] = useState<'id' | 'name'>('name');
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+
+  const schema = z.object({
+    name: z.string().min(1, t('expeditors.validation.nameRequired')),
+    phone: z.string().min(1, t('expeditors.validation.phoneRequired')),
+  });
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(expeditorSchema) as Resolver<FormValues>,
+    resolver: zodResolver(schema) as Resolver<FormValues>,
     defaultValues: { name: '', phone: '' },
   });
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getExpeditors();
-      setExpeditors(res.data);
-    } catch {
+      setError(null);
+      const sortParam = `${orderBy},${order}`;
+      const res = await getExpeditors({ page, size: rowsPerPage, sort: sortParam });
+      setExpeditors(res.data.content);
+      setTotalCount(res.data.totalElements);
+    } catch (err) {
       setError(t('expeditors.errorLoading'));
+      console.error('Failed to load expeditors:', err);
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [page, rowsPerPage, orderBy, order, t]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleRequestSort = (property: 'id' | 'name') => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+    setPage(0); // Reset to first page when sorting changes
+  };
 
   const openCreate = () => {
     setEditTarget(null);
@@ -125,28 +148,13 @@ const Expeditors: React.FC = () => {
     }
   };
 
-  const toggleExpand = async (id: number) => {
-    if (expandedId === id) {
-      setExpandedId(null);
-      return;
-    }
-    setExpandedId(id);
-    if (!expeditorCustomers[id]) {
-      try {
-        const res = await getExpeditorCustomers(id);
-        setExpeditorCustomers((prev) => ({ ...prev, [id]: res.data }));
-      } catch {
-        setExpeditorCustomers((prev) => ({ ...prev, [id]: [] }));
-      }
-    }
-  };
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Expeditors</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{t('expeditors.title')}</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          Add Expeditor
+          {t('expeditors.addExpeditor')}
         </Button>
       </Box>
 
@@ -159,21 +167,36 @@ const Expeditors: React.FC = () => {
       ) : (
         <TableContainer component={Paper} elevation={2}>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Created</TableCell>
-                <TableCell align="center">Customers</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
+             <TableHead>
+               <TableRow>
+                 <TableCell>
+                   <TableSortLabel
+                     active={orderBy === 'id'}
+                     direction={orderBy === 'id' ? order : 'asc'}
+                     onClick={() => handleRequestSort('id')}
+                   >
+                     {t('expeditors.table.id')}
+                   </TableSortLabel>
+                 </TableCell>
+                 <TableCell>
+                   <TableSortLabel
+                     active={orderBy === 'name'}
+                     direction={orderBy === 'name' ? order : 'asc'}
+                     onClick={() => handleRequestSort('name')}
+                   >
+                     {t('expeditors.table.name')}
+                   </TableSortLabel>
+                 </TableCell>
+                  <TableCell>{t('expeditors.table.phone')}</TableCell>
+                  <TableCell>{t('expeditors.table.creationTime')}</TableCell>
+                  <TableCell align="center">{t('expeditors.table.actions')}</TableCell>
+               </TableRow>
+             </TableHead>
             <TableBody>
-              {expeditors.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">No expeditors found</TableCell>
-                </TableRow>
+                {expeditors.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">{t('expeditors.noExpeditors')}</TableCell>
+                  </TableRow>
               ) : (
                 expeditors.map((exp) => (
                   <React.Fragment key={exp.id}>
@@ -181,76 +204,42 @@ const Expeditors: React.FC = () => {
                       <TableCell>{exp.id}</TableCell>
                       <TableCell>{exp.name}</TableCell>
                       <TableCell>{exp.phone}</TableCell>
-                      <TableCell>
-                        {exp.creationTime
-                          ? new Date(exp.creationTime).toLocaleDateString()
-                          : '—'}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="View assigned customers">
-                          <IconButton
-                            size="small"
-                            onClick={() => toggleExpand(exp.id!)}
-                            color={expandedId === exp.id ? 'primary' : 'default'}
-                          >
-                            <PeopleIcon fontSize="small" />
-                            {expandedId === exp.id ? (
-                              <CollapseIcon fontSize="small" />
-                            ) : (
-                              <ExpandIcon fontSize="small" />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Edit">
-                          <IconButton size="small" onClick={() => openEdit(exp)}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => setDeleteTarget(exp)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell colSpan={6} sx={{ p: 0, border: 0 }}>
-                        <Collapse in={expandedId === exp.id} unmountOnExit>
-                          <Box sx={{ p: 2, backgroundColor: 'grey.50' }}>
-                            <Typography variant="subtitle2" gutterBottom>
-                              Assigned Customers:
-                            </Typography>
-                            {expeditorCustomers[exp.id!]?.length === 0 ? (
-                              <Typography variant="body2" color="text.secondary">
-                                No customers assigned
-                              </Typography>
-                            ) : (
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                {(expeditorCustomers[exp.id!] ?? []).map((c) => (
-                                  <Chip
-                                    key={c.id}
-                                    label={`${c.name} (${c.phone})`}
-                                    size="small"
-                                    variant="outlined"
-                                  />
-                                ))}
-                              </Box>
-                            )}
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
+                       <TableCell>
+                         {exp.creationTime
+                           ? new Date(exp.creationTime).toLocaleDateString()
+                           : '—'}
+                       </TableCell>
+                       <TableCell align="center">
+                         <Tooltip title="Edit">
+                           <IconButton size="small" onClick={() => openEdit(exp)}>
+                             <EditIcon fontSize="small" />
+                           </IconButton>
+                         </Tooltip>
+                         <Tooltip title="Delete">
+                           <IconButton
+                             size="small"
+                             color="error"
+                             onClick={() => setDeleteTarget(exp)}
+                           >
+                             <DeleteIcon fontSize="small" />
+                           </IconButton>
+                         </Tooltip>
+                       </TableCell>
+                     </TableRow>
                   </React.Fragment>
                 ))
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            component="div"
+            count={totalCount}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[50]}
+            disabled={loading}
+          />
         </TableContainer>
       )}
 

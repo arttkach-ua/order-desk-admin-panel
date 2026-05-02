@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -28,9 +28,10 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import type { SubmitHandler, Resolver } from 'react-hook-form';
+import type { SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import {
   getPrices,
   getCurrentPrices,
@@ -40,21 +41,8 @@ import {
 import { getProducts } from '../api/products';
 import type { PriceDto, PriceTypeDto, ProductDto } from '../types';
 
-const batchSchema = z.object({
-  priceTypeId: z.coerce.number().min(1, 'Price type is required'),
-  prices: z
-    .array(
-      z.object({
-        productId: z.coerce.number().min(1, 'Product is required'),
-        value: z.coerce.number().min(0, 'Value must be non-negative'),
-      })
-    )
-    .min(1, 'Add at least one price item'),
-});
-
-type BatchFormValues = z.infer<typeof batchSchema>;
-
 const Prices: React.FC = () => {
+  const { t } = useTranslation();
   const [prices, setPrices] = useState<PriceDto[]>([]);
   const [priceTypes, setPriceTypes] = useState<PriceTypeDto[]>([]);
   const [products, setProducts] = useState<ProductDto[]>([]);
@@ -64,8 +52,22 @@ const Prices: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const batchSchema = z.object({
+    priceTypeId: z.coerce.number().min(1, t('prices.validation.priceTypeRequired')),
+    prices: z
+      .array(
+        z.object({
+          productId: z.coerce.number().min(1, 'Product is required'),
+          value: z.coerce.number().min(0, 'Value must be non-negative'),
+        })
+      )
+      .min(1, 'Add at least one price item'),
+  });
+
+  type BatchFormValues = z.infer<typeof batchSchema>;
+
   const { control, handleSubmit, reset, formState: { errors } } = useForm<BatchFormValues>({
-    resolver: zodResolver(batchSchema) as Resolver<BatchFormValues>,
+    resolver: zodResolver(batchSchema) as any,
     defaultValues: { priceTypeId: 0, prices: [{ productId: 0, value: 0 }] },
   });
 
@@ -110,27 +112,27 @@ const Prices: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Prices</Typography>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <ToggleButtonGroup
-            value={view}
-            exclusive
-            onChange={(_, v) => v && setView(v)}
-            size="small"
-          >
-            <ToggleButton value="current">Current</ToggleButton>
-            <ToggleButton value="all">All</ToggleButton>
-          </ToggleButtonGroup>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setDialogOpen(true)}
-          >
-            Batch Add Prices
-          </Button>
-        </Stack>
-      </Box>
+       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+         <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{t('prices.title')}</Typography>
+         <Stack direction="row" spacing={2} alignItems="center">
+           <ToggleButtonGroup
+             value={view}
+             exclusive
+             onChange={(_, v) => v && setView(v)}
+             size="small"
+           >
+             <ToggleButton value="current">Current</ToggleButton>
+             <ToggleButton value="all">All</ToggleButton>
+           </ToggleButtonGroup>
+           <Button
+             variant="contained"
+             startIcon={<AddIcon />}
+             onClick={() => setDialogOpen(true)}
+           >
+             {t('prices.batchUpdate')}
+           </Button>
+         </Stack>
+       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -141,22 +143,22 @@ const Prices: React.FC = () => {
       ) : (
         <TableContainer component={Paper} elevation={2}>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Product</TableCell>
-                <TableCell>Price Type</TableCell>
-                <TableCell>Price</TableCell>
-                <TableCell>Valid From</TableCell>
-                <TableCell>Valid To</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
+             <TableHead>
+               <TableRow>
+                 <TableCell>{t('prices.table.id')}</TableCell>
+                 <TableCell>{t('prices.table.product')}</TableCell>
+                 <TableCell>{t('prices.table.priceType')}</TableCell>
+                 <TableCell>{t('prices.table.price')}</TableCell>
+                 <TableCell>{t('prices.table.validFrom')}</TableCell>
+                 <TableCell>{t('prices.table.validTo')}</TableCell>
+                 <TableCell>{t('prices.table.status')}</TableCell>
+               </TableRow>
+             </TableHead>
             <TableBody>
-              {prices.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">No prices found</TableCell>
-                </TableRow>
+               {prices.length === 0 ? (
+                 <TableRow>
+                   <TableCell colSpan={7} align="center">{t('prices.noPrices')}</TableCell>
+                 </TableRow>
               ) : (
                 prices.map((p) => (
                   <TableRow key={p.id} hover>
@@ -170,13 +172,13 @@ const Prices: React.FC = () => {
                     <TableCell>
                       {p.validTo ? new Date(p.validTo).toLocaleDateString() : '—'}
                     </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={p.isCurrent ? 'Active' : 'Expired'}
-                        color={p.isCurrent ? 'success' : 'default'}
-                        size="small"
-                      />
-                    </TableCell>
+                     <TableCell>
+                       <Chip
+                         label={p.isCurrent ? t('prices.status.active') : t('prices.status.expired')}
+                         color={p.isCurrent ? 'success' : 'default'}
+                         size="small"
+                       />
+                     </TableCell>
                   </TableRow>
                 ))
               )}
@@ -185,8 +187,8 @@ const Prices: React.FC = () => {
         </TableContainer>
       )}
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Batch Add Prices</DialogTitle>
+       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+         <DialogTitle>{t('prices.batchUpdateTitle')}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <Controller
@@ -208,50 +210,50 @@ const Prices: React.FC = () => {
                 </TextField>
               )}
             />
-            <Divider />
-            <Typography variant="subtitle1">Price Items</Typography>
-            {fields.map((field, index) => (
-              <Stack key={field.id} direction="row" spacing={1} alignItems="flex-start">
-                <Controller
-                  name={`prices.${index}.productId`}
-                  control={control}
-                  render={({ field: f }) => (
-                    <TextField
-                      {...f}
-                      select
-                      label="Product"
-                      size="small"
-                      sx={{ flex: 2 }}
-                      error={!!errors.prices?.[index]?.productId}
-                      helperText={errors.prices?.[index]?.productId?.message}
-                    >
-                      <MenuItem value={0} disabled>Select product</MenuItem>
+             <Divider />
+             <Typography variant="subtitle1">{t('common.add')}</Typography>
+             {fields.map((field, index) => (
+               <Stack key={field.id} direction="row" spacing={1} alignItems="flex-start">
+                 <Controller
+                   name={`prices.${index}.productId`}
+                   control={control}
+                   render={({ field: f }) => (
+                     <TextField
+                       {...f}
+                       select
+                       label={t('prices.form.product')}
+                       size="small"
+                       sx={{ flex: 2 }}
+                       error={!!errors.prices?.[index]?.productId}
+                       helperText={errors.prices?.[index]?.productId?.message}
+                     >
+                       <MenuItem value={0} disabled>{t('prices.form.selectProduct')}</MenuItem>
                       {products.map((p) => (
                         <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
                       ))}
                     </TextField>
                   )}
                 />
-                <Controller
-                  name={`prices.${index}.value`}
-                  control={control}
-                  render={({ field: f }) => (
-                    <TextField
-                      label="Price"
-                      type="number"
-                      size="small"
-                      sx={{ flex: 1 }}
-                      value={f.value}
-                      onChange={f.onChange}
-                      onBlur={f.onBlur}
-                      name={f.name}
-                      inputRef={f.ref}
-                      inputProps={{ min: 0, step: 0.01 }}
-                      error={!!errors.prices?.[index]?.value}
-                      helperText={errors.prices?.[index]?.value?.message}
-                    />
-                  )}
-                />
+                 <Controller
+                   name={`prices.${index}.value`}
+                   control={control}
+                   render={({ field: f }) => (
+                     <TextField
+                       label={t('prices.form.price')}
+                       type="number"
+                       size="small"
+                       sx={{ flex: 1 }}
+                       value={f.value}
+                       onChange={f.onChange}
+                       onBlur={f.onBlur}
+                       name={f.name}
+                       inputRef={f.ref}
+                       inputProps={{ min: 0, step: 0.01 }}
+                       error={!!errors.prices?.[index]?.value}
+                       helperText={errors.prices?.[index]?.value?.message}
+                     />
+                   )}
+                 />
                 <Tooltip title="Remove">
                   <span>
                     <IconButton

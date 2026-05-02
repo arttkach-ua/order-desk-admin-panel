@@ -98,21 +98,22 @@
       "validUrl": "Must be a valid URL"
     }
   },
-  "customers": {
-    "title": "Customers",
-    "addCustomer": "Add Customer",
-    "addCustomerTitle": "Add Customer",
-    "noCustomers": "No customers found",
-    "errorLoading": "Failed to load customers. Make sure the backend is running.",
-    "errorCreating": "Failed to create customer.",
-    "table": {
-      "id": "ID",
-      "name": "Name",
-      "email": "Email",
-      "phone": "Phone",
-      "expeditor": "Expeditor",
-      "creationTime": "Creation Time"
-    },
+   "customers": {
+     "title": "Customers",
+     "addCustomer": "Add Customer",
+     "addCustomerTitle": "Add Customer",
+     "noCustomers": "No customers found",
+     "errorLoading": "Failed to load customers. Make sure the backend is running.",
+     "errorCreating": "Failed to create customer.",
+     "table": {
+       "id": "ID",
+       "name": "Name",
+       "email": "Email",
+       "phone": "Phone",
+       "expeditor": "Expeditor",
+       "creationTime": "Creation Time",
+       "actions": "Actions"
+     },
     "form": {
       "name": "Name",
       "email": "Email",
@@ -128,19 +129,20 @@
       "phoneRequired": "Phone is required"
     }
   },
-  "expeditors": {
-    "title": "Expeditors",
-    "addExpeditor": "Add Expeditor",
-    "addExpeditorTitle": "Add Expeditor",
-    "noExpeditors": "No expeditors found",
-    "errorLoading": "Failed to load expeditors. Make sure the backend is running.",
-    "errorCreating": "Failed to create expeditor.",
-    "table": {
-      "id": "ID",
-      "name": "Name",
-      "phone": "Phone",
-      "creationTime": "Creation Time"
-    },
+   "expeditors": {
+     "title": "Expeditors",
+     "addExpeditor": "Add Expeditor",
+     "addExpeditorTitle": "Add Expeditor",
+     "noExpeditors": "No expeditors found",
+     "errorLoading": "Failed to load expeditors. Make sure the backend is running.",
+     "errorCreating": "Failed to create expeditor.",
+      "table": {
+        "id": "ID",
+        "name": "Name",
+        "phone": "Phone",
+        "creationTime": "Creation Time",
+        "actions": "Actions"
+      },
     "form": {
       "name": "Name",
       "phone": "Phone"
@@ -168,34 +170,48 @@
       "nameRequired": "Name is required"
     }
   },
-  "prices": {
-    "title": "Current Prices",
-    "batchUpdate": "Batch Update Prices",
-    "batchUpdateTitle": "Batch Update Prices",
-    "noPrices": "No prices found",
-    "errorLoading": "Failed to load prices. Make sure the backend is running.",
-    "errorUpdating": "Failed to update prices.",
-    "successUpdating": "Prices updated successfully!",
-    "table": {
-      "productId": "Product ID",
-      "productName": "Product Name",
-      "priceType": "Price Type",
-      "price": "Price",
-      "validFrom": "Valid From",
-      "validTo": "Valid To"
-    },
-    "form": {
-      "priceType": "Price Type",
-      "selectPriceType": "Select a price type",
-      "uploadCsv": "Upload CSV file with product prices (productId,price)",
-      "sample": "Sample: 1,10.50",
-      "validationErrors": "Validation Errors:"
-    },
-    "validation": {
-      "priceTypeRequired": "Price type is required",
-      "csvRequired": "CSV file is required"
-    }
-  },
+    "prices": {
+     "title": "Current Prices",
+     "batchUpdate": "Batch Update Prices",
+     "batchUpdateTitle": "Batch Update Prices",
+     "noPrices": "No prices found",
+     "errorLoading": "Failed to load prices. Make sure the backend is running.",
+     "errorUpdating": "Failed to update prices.",
+     "successUpdating": "Prices updated successfully!",
+     "view": {
+       "current": "Current",
+       "all": "All"
+     },
+     "table": {
+       "id": "ID",
+       "product": "Product",
+       "productId": "Product ID",
+       "productName": "Product Name",
+       "priceType": "Price Type",
+       "price": "Price",
+       "validFrom": "Valid From",
+       "validTo": "Valid To",
+       "status": "Status"
+     },
+     "form": {
+       "priceType": "Price Type",
+       "selectPriceType": "Select a price type",
+       "product": "Product",
+       "selectProduct": "Select product",
+       "price": "Price",
+       "uploadCsv": "Upload CSV file with product prices (productId,price)",
+       "sample": "Sample: 1,10.50",
+       "validationErrors": "Validation Errors:"
+     },
+     "validation": {
+       "priceTypeRequired": "Price type is required",
+       "csvRequired": "CSV file is required"
+     },
+     "status": {
+       "active": "Active",
+       "expired": "Expired"
+     }
+   },
   "orders": {
     "title": "Orders list",
     "placeholder": "Orders management screen will be added in the next step."
