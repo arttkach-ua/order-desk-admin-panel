@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -22,24 +22,26 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { getPriceTypes, createPriceType } from '../api/prices';
 import type { PriceTypeDto } from '../types';
 
-const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 const PriceTypes: React.FC = () => {
+  const { t } = useTranslation();
   const [priceTypes, setPriceTypes] = useState<PriceTypeDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const schema = z.object({
+    name: z.string().min(1, t('priceTypes.validation.nameRequired')),
+  });
+
+  type FormValues = z.infer<typeof schema>;
+
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(priceTypeSchema),
+    resolver: zodResolver(schema),
     defaultValues: { name: '' },
   });
 

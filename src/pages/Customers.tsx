@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -30,6 +30,7 @@ import { useForm, Controller } from 'react-hook-form';
 import type { SubmitHandler, Resolver } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import {
   getCustomers,
   createCustomer,
@@ -40,16 +41,8 @@ import { getExpeditors } from '../api/expeditors';
 import type { CustomerDto, ExpeditorDto } from '../types';
 import ConfirmDialog from '../components/ConfirmDialog';
 
-const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Valid email required'),
-  phone: z.string().min(1, 'Phone is required'),
-  expeditorId: z.coerce.number().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
-
 const Customers: React.FC = () => {
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState<CustomerDto[]>([]);
   const [expeditors, setExpeditors] = useState<ExpeditorDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,8 +52,17 @@ const Customers: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CustomerDto | null>(null);
 
+  const schema = z.object({
+    name: z.string().min(1, t('customers.validation.nameRequired')),
+    email: z.string().email(t('customers.validation.emailInvalid')),
+    phone: z.string().min(1, t('customers.validation.phoneRequired')),
+    expeditorId: z.coerce.number().optional(),
+  });
+
+  type FormValues = z.infer<typeof schema>;
+
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(customerSchema) as Resolver<FormValues>,
+    resolver: zodResolver(schema) as Resolver<FormValues>,
     defaultValues: { name: '', email: '', phone: '', expeditorId: undefined },
   });
 
@@ -69,7 +71,8 @@ const Customers: React.FC = () => {
       setLoading(true);
       const [custRes, expRes] = await Promise.all([getCustomers(), getExpeditors()]);
       setCustomers(custRes.data);
-      setExpeditors(expRes.data);
+      // Handle paginated response from getExpeditors
+      setExpeditors(expRes.data.content || expRes.data);
     } catch {
       setError(t('customers.errorLoading'));
     } finally {
@@ -131,12 +134,12 @@ const Customers: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Customers</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          Add Customer
-        </Button>
-      </Box>
+       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+         <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{t('customers.title')}</Typography>
+         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+           {t('customers.addCustomer')}
+         </Button>
+       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -147,22 +150,22 @@ const Customers: React.FC = () => {
       ) : (
         <TableContainer component={Paper} elevation={2}>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Expeditor</TableCell>
-                <TableCell>Created</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
+             <TableHead>
+               <TableRow>
+                 <TableCell>{t('customers.table.id')}</TableCell>
+                 <TableCell>{t('customers.table.name')}</TableCell>
+                 <TableCell>{t('customers.table.email')}</TableCell>
+                 <TableCell>{t('customers.table.phone')}</TableCell>
+                 <TableCell>{t('customers.table.expeditor')}</TableCell>
+                 <TableCell>{t('customers.table.creationTime')}</TableCell>
+                 <TableCell align="center">{t('customers.table.actions')}</TableCell>
+               </TableRow>
+             </TableHead>
             <TableBody>
-              {customers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">No customers found</TableCell>
-                </TableRow>
+               {customers.length === 0 ? (
+                 <TableRow>
+                   <TableCell colSpan={7} align="center">{t('customers.noCustomers')}</TableCell>
+                 </TableRow>
               ) : (
                 customers.map((c) => (
                   <TableRow key={c.id} hover>
