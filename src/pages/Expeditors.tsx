@@ -65,23 +65,23 @@ const Expeditors: React.FC = () => {
   >({});
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema) as Resolver<FormValues>,
+    resolver: zodResolver(expeditorSchema) as Resolver<FormValues>,
     defaultValues: { name: '', phone: '' },
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getExpeditors();
       setExpeditors(res.data);
     } catch {
-      setError('Failed to load expeditors. Make sure the backend is running.');
+      setError(t('expeditors.errorLoading'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const openCreate = () => {
     setEditTarget(null);
@@ -255,30 +255,30 @@ const Expeditors: React.FC = () => {
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editTarget ? 'Edit Expeditor' : 'Add Expeditor'}</DialogTitle>
+        <DialogTitle>{editTarget ? t('common.edit') : t('expeditors.addExpeditorTitle')}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <Controller
               name="name"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Name" error={!!errors.name} helperText={errors.name?.message} required />
+                <TextField {...field} label={t('expeditors.form.name')} error={!!errors.name} helperText={errors.name?.message} required />
               )}
             />
             <Controller
               name="phone"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Phone" error={!!errors.phone} helperText={errors.phone?.message} required />
+                <TextField {...field} label={t('expeditors.form.phone')} error={!!errors.phone} helperText={errors.phone?.message} required />
               )}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={() => { setDialogOpen(false); reset(); setEditTarget(null); }}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" variant="contained" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save'}
+              {submitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogActions>
         </form>
@@ -286,8 +286,8 @@ const Expeditors: React.FC = () => {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Delete Expeditor"
-        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        title={t('common.delete')}
+        message={`${t('common.delete')} "${deleteTarget?.name}"?`}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

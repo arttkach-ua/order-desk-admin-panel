@@ -60,24 +60,24 @@ const Customers: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<CustomerDto | null>(null);
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema) as Resolver<FormValues>,
+    resolver: zodResolver(customerSchema) as Resolver<FormValues>,
     defaultValues: { name: '', email: '', phone: '', expeditorId: undefined },
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const [custRes, expRes] = await Promise.all([getCustomers(), getExpeditors()]);
       setCustomers(custRes.data);
       setExpeditors(expRes.data);
     } catch {
-      setError('Failed to load customers. Make sure the backend is running.');
+      setError(t('customers.errorLoading'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const openCreate = () => {
     setEditTarget(null);
@@ -201,36 +201,36 @@ const Customers: React.FC = () => {
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editTarget ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
+        <DialogTitle>{editTarget ? t('common.edit') : t('customers.addCustomerTitle')}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <Controller
               name="name"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Name" error={!!errors.name} helperText={errors.name?.message} required />
+                <TextField {...field} label={t('customers.form.name')} error={!!errors.name} helperText={errors.name?.message} required />
               )}
             />
             <Controller
               name="email"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Email" type="email" error={!!errors.email} helperText={errors.email?.message} required />
+                <TextField {...field} label={t('customers.form.email')} type="email" error={!!errors.email} helperText={errors.email?.message} required />
               )}
             />
             <Controller
               name="phone"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Phone" error={!!errors.phone} helperText={errors.phone?.message} required />
+                <TextField {...field} label={t('customers.form.phone')} error={!!errors.phone} helperText={errors.phone?.message} required />
               )}
             />
             <Controller
               name="expeditorId"
               control={control}
               render={({ field }) => (
-                <TextField {...field} select label="Expeditor (optional)">
-                  <MenuItem value="">None</MenuItem>
+                <TextField {...field} select label={t('customers.form.expeditor')}>
+                  <MenuItem value="">{t('customers.form.noExpeditor')}</MenuItem>
                   {expeditors.map((e) => (
                     <MenuItem key={e.id} value={e.id}>{e.name}</MenuItem>
                   ))}
@@ -240,10 +240,10 @@ const Customers: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => { setDialogOpen(false); reset(); setEditTarget(null); }}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" variant="contained" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save'}
+              {submitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogActions>
         </form>
@@ -251,8 +251,8 @@ const Customers: React.FC = () => {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Delete Customer"
-        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        title={t('common.delete')}
+        message={`${t('common.delete')} "${deleteTarget?.name}"?`}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

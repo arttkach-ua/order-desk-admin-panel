@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -271,7 +271,7 @@ const Prices: React.FC = () => {
               size="small"
               onClick={() => append({ productId: 0, value: 0 })}
             >
-              + Add Item
+              + {t('common.add')}
             </Button>
           </DialogContent>
           <DialogActions>
@@ -281,10 +281,10 @@ const Prices: React.FC = () => {
                 reset({ priceTypeId: 0, prices: [{ productId: 0, value: 0 }] });
               }}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" variant="contained" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save'}
+              {submitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogActions>
         </form>
