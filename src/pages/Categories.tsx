@@ -24,39 +24,41 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getCategories, createCategory } from '../api/categories';
 import type { ProductCategoryDto } from '../types';
-
-const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  imageUrl: z.string().url('Must be a valid URL').or(z.literal('')).optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+import { useTranslation } from 'react-i18next';
 
 const Categories: React.FC = () => {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<ProductCategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const categorySchema = z.object({
+    name: z.string().min(1, t('categories.validation.nameRequired')),
+    imageUrl: z.string().url(t('categories.validation.validUrl')).or(z.literal('')).optional(),
+  });
+
+  type FormValues = z.infer<typeof categorySchema>;
+
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(categorySchema),
     defaultValues: { name: '', imageUrl: '' },
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getCategories();
       setCategories(res.data);
     } catch {
-      setError('Failed to load categories. Make sure the backend is running.');
+      setError(t('categories.errorLoading'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -66,7 +68,7 @@ const Categories: React.FC = () => {
       reset();
       await load();
     } catch {
-      setError('Failed to create category.');
+      setError(t('categories.errorCreating'));
     } finally {
       setSubmitting(false);
     }
@@ -75,13 +77,13 @@ const Categories: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Product Categories</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{t('categories.title')}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setDialogOpen(true)}
         >
-          Add Category
+          {t('categories.addCategory')}
         </Button>
       </Box>
 
@@ -96,15 +98,15 @@ const Categories: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Image URL</TableCell>
+                <TableCell>{t('categories.table.id')}</TableCell>
+                <TableCell>{t('categories.table.name')}</TableCell>
+                <TableCell>{t('categories.table.imageUrl')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {categories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} align="center">No categories found</TableCell>
+                  <TableCell colSpan={3} align="center">{t('categories.noCategories')}</TableCell>
                 </TableRow>
               ) : (
                 categories.map((c) => (
@@ -114,7 +116,7 @@ const Categories: React.FC = () => {
                     <TableCell>
                       {c.imageUrl ? (
                         <a href={c.imageUrl} target="_blank" rel="noreferrer">
-                          View
+                          {t('common.view')}
                         </a>
                       ) : '—'}
                     </TableCell>
@@ -127,28 +129,28 @@ const Categories: React.FC = () => {
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Category</DialogTitle>
+        <DialogTitle>{t('categories.addCategoryTitle')}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <Controller
               name="name"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Name" error={!!errors.name} helperText={errors.name?.message} required />
+                <TextField {...field} label={t('categories.form.name')} error={!!errors.name} helperText={errors.name?.message} required />
               )}
             />
             <Controller
               name="imageUrl"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Image URL" error={!!errors.imageUrl} helperText={errors.imageUrl?.message} />
+                <TextField {...field} label={t('categories.form.imageUrl')} error={!!errors.imageUrl} helperText={errors.imageUrl?.message} />
               )}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => { setDialogOpen(false); reset(); }}>Cancel</Button>
+            <Button onClick={() => { setDialogOpen(false); reset(); }}>{t('common.cancel')}</Button>
             <Button type="submit" variant="contained" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save'}
+              {submitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogActions>
         </form>

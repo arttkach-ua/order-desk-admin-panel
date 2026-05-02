@@ -27,6 +27,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { getProducts, createProduct } from '../api/products';
 import { getCategories } from '../api/categories';
 import type { ProductDto, ProductCategoryDto } from '../types';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -39,6 +40,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const Products: React.FC = () => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [categories, setCategories] = useState<ProductCategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,25 +48,33 @@ const Products: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const productSchema = z.object({
+    name: z.string().min(1, t('products.validation.nameRequired')),
+    description: z.string().optional(),
+    categoryId: z.coerce.number().min(1, t('products.validation.categoryRequired')),
+    imageUrl: z.string().url(t('products.validation.validUrl')).or(z.literal('')).optional(),
+    price: z.coerce.number().min(0, t('products.validation.priceNonNegative')).optional(),
+  });
+
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema) as Resolver<FormValues>,
+    resolver: zodResolver(productSchema) as Resolver<FormValues>,
     defaultValues: { name: '', description: '', categoryId: 0, imageUrl: '', price: 0 },
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const [prodRes, catRes] = await Promise.all([getProducts(), getCategories()]);
       setProducts(prodRes.data);
       setCategories(catRes.data);
     } catch {
-      setError('Failed to load products. Make sure the backend is running.');
+      setError(t('products.errorLoading'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const onSubmit: SubmitHandler<FormValues> = async (values) => {
     try {
@@ -74,7 +84,7 @@ const Products: React.FC = () => {
       reset();
       await load();
     } catch {
-      setError('Failed to create product.');
+      setError(t('products.errorCreating'));
     } finally {
       setSubmitting(false);
     }
@@ -86,13 +96,13 @@ const Products: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Products</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{t('products.title')}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setDialogOpen(true)}
         >
-          Add Product
+          {t('products.addProduct')}
         </Button>
       </Box>
 
@@ -107,18 +117,18 @@ const Products: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Price</TableCell>
-                <TableCell>Image URL</TableCell>
+                <TableCell>{t('products.table.id')}</TableCell>
+                <TableCell>{t('products.table.name')}</TableCell>
+                <TableCell>{t('products.table.description')}</TableCell>
+                <TableCell>{t('products.table.category')}</TableCell>
+                <TableCell>{t('products.table.price')}</TableCell>
+                <TableCell>{t('products.table.imageUrl')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">No products found</TableCell>
+                  <TableCell colSpan={6} align="center">{t('products.noProducts')}</TableCell>
                 </TableRow>
               ) : (
                 products.map((p) => (
@@ -131,7 +141,7 @@ const Products: React.FC = () => {
                     <TableCell>
                       {p.imageUrl ? (
                         <a href={p.imageUrl} target="_blank" rel="noreferrer">
-                          View
+                          {t('common.view')}
                         </a>
                       ) : '—'}
                     </TableCell>
@@ -144,21 +154,21 @@ const Products: React.FC = () => {
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Product</DialogTitle>
+        <DialogTitle>{t('products.addProductTitle')}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <Controller
               name="name"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Name" error={!!errors.name} helperText={errors.name?.message} required />
+                <TextField {...field} label={t('products.form.name')} error={!!errors.name} helperText={errors.name?.message} required />
               )}
             />
             <Controller
               name="description"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Description" multiline rows={2} />
+                <TextField {...field} label={t('products.form.description')} multiline rows={2} />
               )}
             />
             <Controller
@@ -168,12 +178,12 @@ const Products: React.FC = () => {
                 <TextField
                   {...field}
                   select
-                  label="Category"
+                  label={t('products.form.category')}
                   error={!!errors.categoryId}
                   helperText={errors.categoryId?.message}
                   required
                 >
-                  <MenuItem value={0} disabled>Select a category</MenuItem>
+                  <MenuItem value={0} disabled>{t('products.form.selectCategory')}</MenuItem>
                   {categories.map((c) => (
                     <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
                   ))}
@@ -186,7 +196,7 @@ const Products: React.FC = () => {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Price"
+                  label={t('products.form.price')}
                   type="number"
                   inputProps={{ min: 0, step: 0.01 }}
                   error={!!errors.price}
@@ -198,14 +208,14 @@ const Products: React.FC = () => {
               name="imageUrl"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Image URL" error={!!errors.imageUrl} helperText={errors.imageUrl?.message} />
+                <TextField {...field} label={t('products.form.imageUrl')} error={!!errors.imageUrl} helperText={errors.imageUrl?.message} />
               )}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => { setDialogOpen(false); reset(); }}>Cancel</Button>
+            <Button onClick={() => { setDialogOpen(false); reset(); }}>{t('common.cancel')}</Button>
             <Button type="submit" variant="contained" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save'}
+              {submitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogActions>
         </form>

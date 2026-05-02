@@ -8,6 +8,7 @@ import Customers from './pages/Customers';
 import Expeditors from './pages/Expeditors';
 import Prices from './pages/Prices';
 import PriceTypes from './pages/PriceTypes';
+import Orders from './pages/Orders';
 
 const theme = createTheme({
   palette: {
@@ -29,6 +30,7 @@ function App() {
             <Route path="/expeditors" element={<Expeditors />} />
             <Route path="/prices" element={<Prices />} />
             <Route path="/price-types" element={<PriceTypes />} />
+            <Route path="/orders" element={<Orders />} />
           </Routes>
         </Layout>
       </BrowserRouter>

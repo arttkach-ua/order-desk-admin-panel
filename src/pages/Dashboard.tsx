@@ -21,6 +21,7 @@ import { getCategories } from '../api/categories';
 import { getCustomers } from '../api/customers';
 import { getExpeditors } from '../api/expeditors';
 import { getPriceTypes, getCurrentPrices } from '../api/prices';
+import { useTranslation } from 'react-i18next';
 
 interface StatCard {
   label: string;
@@ -30,6 +31,7 @@ interface StatCard {
 }
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<StatCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,50 +54,50 @@ const Dashboard: React.FC = () => {
 
         setStats([
           {
-            label: 'Products',
+            label: t('dashboard.products'),
             value: getValue(products as PromiseSettledResult<{ data: unknown[] }>),
             icon: <ProductsIcon sx={{ fontSize: 40 }} />,
             color: '#1976d2',
           },
           {
-            label: 'Categories',
+            label: t('dashboard.categories'),
             value: getValue(categories as PromiseSettledResult<{ data: unknown[] }>),
             icon: <CategoriesIcon sx={{ fontSize: 40 }} />,
             color: '#388e3c',
           },
           {
-            label: 'Customers',
+            label: t('dashboard.customers'),
             value: getValue(customers as PromiseSettledResult<{ data: unknown[] }>),
             icon: <CustomersIcon sx={{ fontSize: 40 }} />,
             color: '#f57c00',
           },
           {
-            label: 'Expeditors',
+            label: t('dashboard.expeditors'),
             value: getValue(expeditors as PromiseSettledResult<{ data: unknown[] }>),
             icon: <ExpeditorsIcon sx={{ fontSize: 40 }} />,
             color: '#7b1fa2',
           },
           {
-            label: 'Price Types',
+            label: t('dashboard.priceTypes'),
             value: getValue(priceTypes as PromiseSettledResult<{ data: unknown[] }>),
             icon: <PriceTypesIcon sx={{ fontSize: 40 }} />,
             color: '#c62828',
           },
           {
-            label: 'Active Prices',
+            label: t('dashboard.activePrices'),
             value: getValue(prices as PromiseSettledResult<{ data: unknown[] }>),
             icon: <PricesIcon sx={{ fontSize: 40 }} />,
             color: '#00838f',
           },
         ]);
       } catch {
-        setError('Failed to load dashboard data. Make sure the backend is running.');
+        setError(t('dashboard.errorLoading'));
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [t]);
 
   if (loading) {
     return (
@@ -108,7 +110,7 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Dashboard
+        {t('dashboard.title')}
       </Typography>
       {error && (
         <Alert severity="warning" sx={{ mb: 3 }}>
@@ -138,11 +140,13 @@ const Dashboard: React.FC = () => {
       </Grid>
       <Box mt={4}>
         <Alert severity="info">
-          Backend API base URL:{' '}
+          {t('dashboard.apiInfo')}{' '}
           <strong>
             {import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'}
           </strong>
-          . Set the <code>VITE_API_BASE_URL</code> environment variable to change it.
+          . {t('dashboard.apiEnvInfo', {
+            interpolation: { escapeValue: false }
+          }).replace('<1>', '<code>').replace('</1>', '</code>')}
         </Alert>
       </Box>
     </Box>

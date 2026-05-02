@@ -39,23 +39,23 @@ const PriceTypes: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(priceTypeSchema),
     defaultValues: { name: '' },
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getPriceTypes();
       setPriceTypes(res.data);
     } catch {
-      setError('Failed to load price types. Make sure the backend is running.');
+      setError(t('priceTypes.errorLoading'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -74,13 +74,13 @@ const PriceTypes: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Price Types</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{t('priceTypes.title')}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setDialogOpen(true)}
         >
-          Add Price Type
+          {t('priceTypes.addPriceType')}
         </Button>
       </Box>
 
@@ -95,14 +95,14 @@ const PriceTypes: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
+                <TableCell>{t('priceTypes.table.id')}</TableCell>
+                <TableCell>{t('priceTypes.table.name')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {priceTypes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={2} align="center">No price types found</TableCell>
+                  <TableCell colSpan={2} align="center">{t('priceTypes.noPriceTypes')}</TableCell>
                 </TableRow>
               ) : (
                 priceTypes.map((pt) => (
@@ -118,7 +118,7 @@ const PriceTypes: React.FC = () => {
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Add Price Type</DialogTitle>
+        <DialogTitle>{t('priceTypes.addPriceTypeTitle')}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent sx={{ pt: 2 }}>
             <Controller
@@ -128,7 +128,7 @@ const PriceTypes: React.FC = () => {
                 <TextField
                   {...field}
                   fullWidth
-                  label="Name (e.g. RETAIL, WHOLESALE)"
+                  label={t('priceTypes.form.name')}
                   error={!!errors.name}
                   helperText={errors.name?.message}
                   required
@@ -137,9 +137,9 @@ const PriceTypes: React.FC = () => {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => { setDialogOpen(false); reset(); }}>Cancel</Button>
+            <Button onClick={() => { setDialogOpen(false); reset(); }}>{t('common.cancel')}</Button>
             <Button type="submit" variant="contained" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save'}
+              {submitting ? t('common.saving') : t('common.save')}
             </Button>
           </DialogActions>
         </form>
